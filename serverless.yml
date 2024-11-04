@@ -1,0 +1,86 @@
+service: sentiment-analysis
+
+frameworkVersion: '3'
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${env:REGION}
+  stage: dev
+  iam:
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+            - 'comprehend:DetectSentiment'
+            - 'dynamodb:PutItem'
+            - 'dynamodb:Query'
+            - 'dynamodb:Scan'
+            - 'dynamodb:UpdateItem'
+            - 'dynamodb:DeleteItem'
+          Resource: '*'
+
+functions:
+  analyzeSentiment:
+    handler: src/handlers/sentiment-analysis-handler.execute
+    timeout: 30
+    memorySize: 256
+    events:
+      - http:
+          path: analyze
+          method: post
+          cors: true
+    environment:
+      DYNAMODB_TABLE: ${env:DYNAMODB_TABLE}
+
+  analyzeSentimentDistribution:
+    handler: src/handlers/analyze-sentiment-distribution-handler.execute
+    timeout: 30
+    memorySize: 256
+    events:
+      - http:
+          path: analyze
+          method: get
+          cors: true
+    environment:
+      DYNAMODB_TABLE: ${env:DYNAMODB_TABLE}
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: 'node18'
+    platform: 'node'
+    concurrency: 10
+    external:
+      - '@nestjs/microservices'
+      - '@nestjs/websockets'
+      - '@nestjs/microservices/microservices-module'
+
+resources:
+  Resources:
+    SentimentTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+package:
+  individually: true
