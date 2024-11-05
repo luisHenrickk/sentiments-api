@@ -20,10 +20,10 @@ export const execute = async event => {
     // Unmarshall items and calculate statistics
     const sentiments = response.Items.map(item => unmarshall(item))
     const totalItems = sentiments.length
-    const sentimentCounts = { Positive: 0, Negative: 0, Neutral: 0, Mixed: 0 }
+    const sentimentCounts = { POSITIVE: 0, NEGATIVE: 0, NEUTRAL: 0, MIXED: 0 }
 
     sentiments.forEach(sentiment => {
-      const sentimentType = sentiment.sentiment
+      const sentimentType = sentiment.content.sentiment
       if (sentimentCounts[sentimentType] !== undefined) {
         sentimentCounts[sentimentType]++
       }
