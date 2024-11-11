@@ -1,3 +1,5 @@
+import { UUID } from 'crypto'
+
 export interface ISentimentScore {
   Positive: number
   Negative: number
@@ -6,14 +8,10 @@ export interface ISentimentScore {
 }
 
 export interface ISentimentContent {
+  sentimentId: UUID
   textMessage: string
   sentiment: string
-  sentimentScore: {
-    Positive: number
-    Negative: number
-    Neutral: number
-    Mixed: number
-  }
+  sentimentScore: ISentimentScore
 }
 
 export interface SentimentKey {

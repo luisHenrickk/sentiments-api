@@ -6,6 +6,7 @@ import { HttpStatus } from '@nestjs/common'
 import { SentimentsRepository } from '../modules/sentiments/sentiments.repository'
 import { DynamoClientService } from '../modules/database/dynamodb-client.service'
 import { ConfigService } from '@nestjs/config'
+import { randomUUID } from 'crypto'
 
 const dynamoClientService = new DynamoClientService()
 const sentimentsRepository = new SentimentsRepository(dynamoClientService)
@@ -40,6 +41,7 @@ export const execute = async event => {
     }
 
     const content = {
+      sentimentId: randomUUID(),
       textMessage: eventBody.textMessage,
       sentiment: sentimentResult.Sentiment,
       sentimentScore,

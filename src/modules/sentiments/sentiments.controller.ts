@@ -7,10 +7,16 @@ import {
   Param,
   Body,
   Query,
+  NotFoundException,
 } from '@nestjs/common'
 import { SentimentsService } from './sentiments.service'
 import { SentimentsFilters } from './types/sentiments.type'
-import { ListSentimentsDto, SentimentContentDto } from './dtos/sentiments.dto'
+import {
+  CreateSentimentsDto,
+  ListSentimentsDto,
+  SentimentContentDto,
+  UpdateSentimentContentDto,
+} from './dtos/sentiments.dto'
 
 @Controller('sentiments')
 export class SentimentsController {
@@ -38,14 +44,18 @@ export class SentimentsController {
       )
       return sentiment
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error
+      }
       throw new Error(`Error getting sentiment by ID: ${error.message}`)
     }
   }
 
   @Post()
-  async create(@Body() content: SentimentContentDto): Promise<void> {
+  async create(@Body() body: CreateSentimentsDto): Promise<void> {
     try {
-      await this.sentimentsService.createSentiment(content)
+      const { message } = body
+      await this.sentimentsService.createSentiment(message)
     } catch (error) {
       throw new Error(`Error creating sentiment: ${error.message}`)
     }
@@ -54,7 +64,7 @@ export class SentimentsController {
   @Put(':id')
   async update(
     @Param('id') sentimentId: string,
-    @Body() updatedContent: SentimentContentDto,
+    @Body() updatedContent: UpdateSentimentContentDto,
   ): Promise<void> {
     try {
       await this.sentimentsService.updateSentiment(sentimentId, updatedContent)

@@ -1,12 +1,24 @@
 import { Injectable } from '@nestjs/common'
 import { SentimentsRepository } from './sentiments.repository'
 import { SentimentsFilters } from './types/sentiments.type'
-import { ListSentimentsDto, SentimentContentDto } from './dtos/sentiments.dto'
+import {
+  ListSentimentsDto,
+  SentimentContentDto,
+  UpdateSentimentContentDto,
+} from './dtos/sentiments.dto'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import {
+  ComprehendClient,
+  DetectSentimentCommand,
+} from '@aws-sdk/client-comprehend'
+import { randomUUID } from 'crypto'
 
 @Injectable()
 export class SentimentsService {
-  constructor(private readonly sentimentsRepository: SentimentsRepository) {}
+  constructor(
+    private readonly sentimentsRepository: SentimentsRepository,
+    private readonly comprehendClient: ComprehendClient,
+  ) {}
 
   async getAllSentiments(
     filters?: SentimentsFilters,
@@ -16,12 +28,13 @@ export class SentimentsService {
       const unmarshalledItem = unmarshall(item)
       return {
         textMessage: unmarshalledItem.textMessage,
-        sentiment: unmarshalledItem.sentiment,
+        sentiment: unmarshalledItem.content.sentiment,
+        sentimentId: unmarshalledItem.content.sentimentId,
         sentimentScore: {
-          Positive: unmarshalledItem.sentimentScore.Positive,
-          Negative: unmarshalledItem.sentimentScore.Negative,
-          Neutral: unmarshalledItem.sentimentScore.Neutral,
-          Mixed: unmarshalledItem.sentimentScore.Mixed,
+          Positive: unmarshalledItem.content.sentimentScore.Positive,
+          Negative: unmarshalledItem.content.sentimentScore.Negative,
+          Neutral: unmarshalledItem.content.sentimentScore.Neutral,
+          Mixed: unmarshalledItem.content.sentimentScore.Mixed,
         },
         createdAt: unmarshalledItem.createdAt,
         updatedAt: unmarshalledItem.updatedAt,
@@ -35,17 +48,41 @@ export class SentimentsService {
   }
 
   async getSentimentById(sentimentId: string): Promise<SentimentContentDto> {
-    const item = await this.sentimentsRepository.getSentimentById(sentimentId)
-    return item as SentimentContentDto
+    const sentiment = await this.sentimentsRepository.getSentimentById(
+      sentimentId,
+    )
+
+    return sentiment
   }
 
-  async createSentiment(content: SentimentContentDto): Promise<void> {
+  async createSentiment(message: string): Promise<void> {
+    const sentimentResult = await this.comprehendClient.send(
+      new DetectSentimentCommand({
+        Text: message,
+        LanguageCode: 'pt',
+      }),
+    )
+
+    const sentimentScore = {
+      Positive: sentimentResult.SentimentScore?.Positive ?? 0,
+      Negative: sentimentResult.SentimentScore?.Negative ?? 0,
+      Neutral: sentimentResult.SentimentScore?.Neutral ?? 0,
+      Mixed: sentimentResult.SentimentScore?.Mixed ?? 0,
+    }
+
+    const content = {
+      sentimentId: randomUUID(),
+      textMessage: message,
+      sentiment: sentimentResult.Sentiment,
+      sentimentScore,
+    }
+
     await this.sentimentsRepository.saveSentiment(content)
   }
 
   async updateSentiment(
     sentimentId: string,
-    updatedContent: SentimentContentDto,
+    updatedContent: UpdateSentimentContentDto,
   ): Promise<void> {
     await this.sentimentsRepository.updateSentiment(sentimentId, updatedContent)
   }
