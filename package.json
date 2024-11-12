@@ -18,7 +18,7 @@
     "deploy:dev": "serverless deploy --stage dev",
     "remove:dev": "serverless remove --stage dev",
     "dockerBuild": "docker build -t sentiments-api .",
-    "dockerStart": "docker run -p 3000:3000 sentiments-api"
+    "dockerStart": "docker run -p 3000:3000 --env-file .env sentiments-api"
   },
   "dependencies": {
     "@aws-sdk/client-comprehend": "^3.549.0",

@@ -24,7 +24,7 @@ export class SentimentsRepository {
 
   async scanTable(filters?: SentimentsFilters): Promise<ScanCommandOutput> {
     let params: any = {
-      TableName: process.env.DYNAMODB_TABLE,
+      TableName: "sentiment-analysis-table",
     }
 
     const filterExpressions = []
@@ -53,7 +53,7 @@ export class SentimentsRepository {
     const { sentimentId } = content
 
     const command = new PutItemCommand({
-      TableName: process.env.DYNAMODB_TABLE,
+      TableName: "sentiment-analysis-table",
       Item: marshall(
         {
           PK: `SENTIMENTS`,
@@ -73,7 +73,7 @@ export class SentimentsRepository {
 
   async getSentimentById(sentimentId: string): Promise<SentimentContentDto> {
     const command = new GetItemCommand({
-      TableName: process.env.DYNAMODB_TABLE,
+      TableName: "sentiment-analysis-table",
       Key: marshall({
         PK: `SENTIMENTS`,
         SK: `DETAILS-${sentimentId}`,
@@ -128,7 +128,7 @@ export class SentimentsRepository {
     const updateExpression = 'SET ' + updateExpressions.join(', ')
 
     const command = new UpdateItemCommand({
-      TableName: process.env.DYNAMODB_TABLE,
+      TableName: "sentiment-analysis-table",
       Key: marshall({
         PK: `SENTIMENTS`,
         SK: `DETAILS-${sentimentId}`,
@@ -142,7 +142,7 @@ export class SentimentsRepository {
 
   async deleteSentiment(sentimentId: string): Promise<void> {
     const command = new DeleteItemCommand({
-      TableName: process.env.DYNAMODB_TABLE,
+      TableName: "sentiment-analysis-table",
       Key: marshall({
         PK: `SENTIMENTS`,
         SK: `DETAILS-${sentimentId}`,

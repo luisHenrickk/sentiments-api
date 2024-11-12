@@ -8,7 +8,7 @@ export class DynamoClientService
 {
   constructor() {
     super({
-      region: process.env.REGION,
+      region: "us-east-1",
     })
   }
 

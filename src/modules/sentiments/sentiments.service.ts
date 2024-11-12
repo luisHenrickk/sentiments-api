@@ -15,10 +15,16 @@ import { randomUUID } from 'crypto'
 
 @Injectable()
 export class SentimentsService {
+  private comprehendClient: ComprehendClient;
   constructor(
     private readonly sentimentsRepository: SentimentsRepository,
-    private readonly comprehendClient: ComprehendClient,
-  ) {}
+    
+  ) {
+    
+    this.comprehendClient = new ComprehendClient({
+      region: "us-east-1",
+    });
+  }
 
   async getAllSentiments(
     filters?: SentimentsFilters,

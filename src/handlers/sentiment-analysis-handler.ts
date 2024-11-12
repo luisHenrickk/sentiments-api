@@ -12,7 +12,7 @@ const dynamoClientService = new DynamoClientService()
 const sentimentsRepository = new SentimentsRepository(dynamoClientService)
 
 const comprehendClient = new ComprehendClient({
-  region: process.env.REGION,
+  region: "us-east-1",
 })
 
 export const execute = async event => {
